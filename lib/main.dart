@@ -1,266 +1,102 @@
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
-    home: Scaffold(body: RadialBarCustomized()),
+    home: Scaffold(body: OverfilledRadialBar()),
   ));
 }
 
-class RadialBarCustomized extends StatefulWidget {
-  const RadialBarCustomized({super.key});
+class OverfilledRadialBar extends StatefulWidget {
+  const OverfilledRadialBar({super.key});
 
   @override
-  State<RadialBarCustomized> createState() => _RadialBarCustomizedState();
+  OverfilledRadialBarState createState() => OverfilledRadialBarState();
 }
 
-class _RadialBarCustomizedState extends State<RadialBarCustomized> {
+class OverfilledRadialBarState extends State<OverfilledRadialBar> {
   TooltipBehavior? _tooltipBehavior;
-  List<ChartSampleData>? _dataSources;
-  List<ChartSampleData>? _chartData;
-  List<CircularChartAnnotation>? _annotationSources;
-  List<Color>? _colors;
+  late List<ChartData> _chartData;
 
   @override
   void initState() {
-    _tooltipBehavior = TooltipBehavior(
-      enable: true,
-      format: 'point.x : point.y%',
-    );
-    _dataSources = _buildAnnotationDataSource();
-    _chartData = _buildChartData();
-    _annotationSources = _buildAnnotationSources();
-
-    _colors = const <Color>[
-      Color.fromRGBO(69, 186, 161, 1.0),
-      Color.fromRGBO(230, 135, 111, 1.0),
-      Color.fromRGBO(145, 132, 202, 1.0),
-      Color.fromRGBO(235, 96, 143, 1.0)
+    _chartData = [
+      ChartData('Low \n3.5k/6k', 3500, Color.fromRGBO(235, 97, 143, 1), 'Low'),
+      ChartData('Average \n7.2k/6k', 7000, Color.fromRGBO(145, 132, 202, 1),
+          'Average'),
+      ChartData(
+          'High \n10.5k/6k', 10500, Color.fromRGBO(69, 187, 161, 1), 'High'),
     ];
-
+    _tooltipBehavior = TooltipBehavior(enable: true);
     super.initState();
-  }
-
-  List<ChartSampleData> _buildChartData() {
-    return [
-      ChartSampleData(
-          x: 'Vehicle',
-          y: 62.70,
-          text: '100%',
-          pointColor: const Color.fromRGBO(69, 186, 161, 1.0)),
-      ChartSampleData(
-          x: 'Education',
-          y: 29.20,
-          text: '100%',
-          pointColor: const Color.fromRGBO(230, 135, 111, 1.0)),
-      ChartSampleData(
-          x: 'Home',
-          y: 85.20,
-          text: '100%',
-          pointColor: const Color.fromRGBO(145, 132, 202, 1.0)),
-      ChartSampleData(
-          x: 'Personal',
-          y: 45.70,
-          text: '100%',
-          pointColor: const Color.fromRGBO(235, 96, 143, 1.0)),
-    ];
-  }
-
-  List<ChartSampleData> _buildAnnotationDataSource() {
-    return [
-      ChartSampleData(
-        x: 'Vehicle',
-        y: 62.70,
-        text: '10%',
-        pointColor: const Color.fromRGBO(69, 186, 161, 1.0),
-      ),
-      ChartSampleData(
-        x: 'Education',
-        y: 29.20,
-        text: '10%',
-        pointColor: const Color.fromRGBO(230, 135, 111, 1.0),
-      ),
-      ChartSampleData(
-        x: 'Home',
-        y: 85.20,
-        text: '100%',
-        pointColor: const Color.fromRGBO(145, 132, 202, 1.0),
-      ),
-      ChartSampleData(
-        x: 'Personal',
-        y: 45.70,
-        text: '100%',
-        pointColor: const Color.fromRGBO(235, 96, 143, 1.0),
-      ),
-    ];
-  }
-
-  List<CircularChartAnnotation> _buildAnnotationSources() {
-    return [
-      CircularChartAnnotation(
-        widget: Icon(
-          Icons.directions_car,
-          size: 20,
-          color: const Color.fromRGBO(69, 186, 161, 1.0),
-        ),
-      ),
-      CircularChartAnnotation(
-        widget: Icon(
-          Icons.note,
-          size: 20,
-          color: const Color.fromRGBO(230, 135, 111, 1.0),
-        ),
-      ),
-      CircularChartAnnotation(
-        widget: Icon(
-          Icons.home,
-          size: 20,
-          color: const Color.fromRGBO(145, 132, 202, 1.0),
-        ),
-      ),
-      CircularChartAnnotation(
-        widget: Icon(
-          Icons.handshake_sharp,
-          size: 20,
-          color: const Color.fromRGBO(235, 96, 143, 1.0),
-        ),
-      ),
-    ];
   }
 
   @override
   Widget build(BuildContext context) {
-    return _buildCustomizedRadialBarChart();
+    return _buildRadialBarChart();
   }
 
-  /// Returns the circular chart with radial bar customization.
-  SfCircularChart _buildCustomizedRadialBarChart() {
+  SfCircularChart _buildRadialBarChart() {
     return SfCircularChart(
-      legend: _buildLegend(),
-      series: _buildRadialBarSeries(),
-      tooltipBehavior: _tooltipBehavior,
-      annotations: <CircularChartAnnotation>[
-        CircularChartAnnotation(
-          widget: Text('Percentage of loan closure',style: TextStyle(fontWeight: FontWeight.bold),),
+        legend: Legend(
+          isVisible: true,
+          iconHeight: 20,
+          iconWidth: 20,
+          overflowMode: LegendItemOverflowMode.wrap,
         ),
-      ],
-    );
+        annotations: <CircularChartAnnotation>[
+          _buildAnnotation(),
+        ],
+        series: <RadialBarSeries<ChartData, String>>[
+          RadialBarSeries<ChartData, String>(
+            dataSource: _chartData,
+            xValueMapper: (ChartData data, int index) => data.x,
+            yValueMapper: (ChartData data, int index) => data.y,
+            pointColorMapper: (ChartData data, int index) => data.color,
+            dataLabelMapper: (ChartData data, int index) => data.text,
+            dataLabelSettings: DataLabelSettings(isVisible: true),
+            maximumValue: 6000,
+            radius: '70%',
+            gap: '2%',
+            cornerStyle: CornerStyle.bothCurve,
+          ),
+        ],
+        tooltipBehavior: _tooltipBehavior,
+        onTooltipRender: (TooltipArgs args) {
+          final NumberFormat numberFormat = NumberFormat.compactCurrency(
+            decimalDigits: 2,
+            symbol: '',
+          );
+          args.text =
+              '${_chartData[args.pointIndex as int].text} : ${numberFormat.format(_chartData[args.pointIndex as int].y)}';
+        });
   }
 
-  /// Builds the legend for the radial bar chart.
-  Legend _buildLegend() {
-    return Legend(
-      isVisible: true,
-      overflowMode: LegendItemOverflowMode.wrap,
-      legendItemBuilder:
-          (String name, dynamic series, dynamic point, int index) {
-        return SizedBox(
-          height: 60,
-          width: 150,
-          child: Row(children: <Widget>[
-            SizedBox(
-              height: 75,
-              width: 65,
-              child: SfCircularChart(
-                annotations: <CircularChartAnnotation>[
-                  _annotationSources![index],
-                ],
-                series: <RadialBarSeries<ChartSampleData, String>>[
-                  RadialBarSeries<ChartSampleData, String>(
-                    dataSource: <ChartSampleData>[_dataSources![index]],
-                    xValueMapper: (ChartSampleData data, int index) => point.x,
-                    yValueMapper: (ChartSampleData data, int index) => data.y,
-                    pointColorMapper: (ChartSampleData data, int index) =>
-                        data.pointColor,
-                    pointRadiusMapper: (ChartSampleData data, int index) =>
-                        data.text,
-                    innerRadius: '70%',
-                    animationDuration: 0,
-                    maximumValue: 100,
-                    radius: '100%',
-                    cornerStyle: CornerStyle.bothCurve,
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(
-              width: 72,
-              child: Text(
-                point.x,
-                style: TextStyle(
-                  color: _colors![index],
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ]),
-        );
-      },
-    );
-  }
-
-  /// Returns the circular radial bar series.
-  List<RadialBarSeries<ChartSampleData, String>> _buildRadialBarSeries() {
-    return <RadialBarSeries<ChartSampleData, String>>[
-      RadialBarSeries<ChartSampleData, String>(
-        dataSource: _chartData,
-        xValueMapper: (ChartSampleData data, int index) => data.x,
-        yValueMapper: (ChartSampleData data, int index) => data.y,
-        pointRadiusMapper: (ChartSampleData data, int index) => data.text,
-        animationDuration: 0,
-        maximumValue: 100,
-        gap: '10%',
-        radius: '90%',
-        cornerStyle: CornerStyle.bothCurve,
-
-        /// Color mapper for each bar in the radial bar series,
-        /// obtained from the data source.
-        pointColorMapper: (ChartSampleData data, int index) => data.pointColor,
-        legendIconType: LegendIconType.circle,
+  CircularChartAnnotation _buildAnnotation() {
+    return CircularChartAnnotation(
+      height: '35%',
+      width: '65%',
+      widget: Column(
+        children: <Widget>[
+          Padding(
+            padding: EdgeInsets.only(top: 15),
+            child: Text('Goal -',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+          ),
+          Text('6k steps/day',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+        ],
       ),
-    ];
-  }
-
-  @override
-  void dispose() {
-    _dataSources!.clear();
-    _annotationSources!.clear();
-    _chartData!.clear();
-    super.dispose();
+    );
   }
 }
 
-///Chart sample data
-class ChartSampleData {
-  ChartSampleData(
-      {this.x,
-      this.y,
-      this.xValue,
-      this.yValue,
-      this.secondSeriesYValue,
-      this.thirdSeriesYValue,
-      this.pointColor,
-      this.size,
-      this.text,
-      this.open,
-      this.close,
-      this.low,
-      this.high,
-      this.volume});
-
-  final dynamic x;
-  final num? y;
-  final dynamic xValue;
-  final num? yValue;
-  final num? secondSeriesYValue;
-  final num? thirdSeriesYValue;
-  final Color? pointColor;
-  final num? size;
-  final String? text;
-  final num? open;
-  final num? close;
-  final num? low;
-  final num? high;
-  final num? volume;
+class ChartData {
+  ChartData(this.x, this.y, this.color, this.text);
+  final String x;
+  final num y;
+  final Color color;
+  final String text;
 }
